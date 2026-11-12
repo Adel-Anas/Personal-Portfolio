@@ -2,11 +2,11 @@
 
 Personal portfolio of **Adel Anas, Full Stack Developer** — an immersive, monochrome digital experience built around a custom GPU particle engine.
 
-A single field of ~26 000 particles travels through the whole page and changes form with each section:
+A single field of up to 44 000 particles travels through the whole page and changes form with each section:
 
 | Section | Particle form |
 | --- | --- |
-| 01 Home | The **Aether A** glyph, crossed by an orbiting comet ring |
+| 01 Home | The Adel Anas **A** (exact brand mark), crossed by an orbiting ring and a flowing ribbon |
 | 02 About | "The mind" — a banded sphere wrapped in two orbits |
 | 03 Expertise | A three-arm spiral galaxy behind the orbital skill map |
 | 04 Projects | A flowing wave field |

@@ -13,6 +13,47 @@
 
 export const MAX_RIPPLES = 6;
 
+/**
+ * Crisp point rasterisation, shared by every particle layer.
+ *
+ * Points are drawn as anti-aliased discs measured in *device pixels*, never as
+ * blurry Gaussian sprites. Particles smaller than ~1.4 px keep a minimum
+ * footprint and are dimmed by their area instead of being smeared, which is
+ * what keeps the field sharp at any resolution. Only the rare large particles
+ * get a faint glow ring.
+ */
+const POINT_VERTEX = /* glsl */ `
+  varying float vPx;
+  varying float vCore;
+  varying float vGlow;
+
+  // diameter in device pixels -> returns alpha compensation for clamped points.
+  // pr = device pixel ratio: the glow threshold is expressed in CSS pixels so
+  // only genuinely large particles get a halo, on every screen density.
+  float setPointSize(float diameter, float pr) {
+    float d = clamp(diameter, 1.4, 9.0 * pr);
+    vGlow = smoothstep(3.5 * pr, 6.5 * pr, d);
+    vCore = d * 0.5;
+    vPx = d * (1.0 + vGlow * 1.2) + 2.0;
+    gl_PointSize = vPx;
+    float cover = clamp(diameter / d, 0.0, 1.0);
+    return cover * cover;
+  }
+`;
+
+const POINT_FRAGMENT = /* glsl */ `
+  varying float vPx;
+  varying float vCore;
+  varying float vGlow;
+
+  float pointMask() {
+    float d = length(gl_PointCoord - 0.5) * vPx;
+    float core = clamp(vCore - d + 0.5, 0.0, 1.0);
+    float halo = exp(-(d * d) / (vCore * vCore * 3.0)) * 0.16 * vGlow;
+    return core + halo;
+  }
+`;
+
 export const particleVertexShader = /* glsl */ `
   #define PI 3.14159265359
   #define MAX_RIPPLES ${MAX_RIPPLES}
@@ -38,6 +79,7 @@ export const particleVertexShader = /* glsl */ `
 
   varying float vAlpha;
   varying float vShade;
+  ${POINT_VERTEX}
 
   float easeInOutCubic(float t) {
     return t < 0.5 ? 4.0 * t * t * t : 1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0;
@@ -94,14 +136,14 @@ export const particleVertexShader = /* glsl */ `
     gl_Position = projectionMatrix * mvPosition;
 
     // Most particles are tiny; a rare few are larger to add depth and sparkle.
-    float size = uSize * (0.32 + pow(aRandom.x, 4.0) * 2.1);
-    gl_PointSize = clamp(size * uPixelRatio / -mvPosition.z, 0.0, 14.0 * uPixelRatio);
+    float diameter = uSize * (0.34 + pow(aRandom.x, 28.0) * 1.6) * uPixelRatio / -mvPosition.z;
+    float cover = setPointSize(diameter, uPixelRatio);
 
     float depthFade = clamp((-mvPosition.z - 3.5) / 7.0, 0.0, 1.0);
     float twinkle = 0.78 + 0.22 * sin(uTime * (0.8 + aRandom.z * 2.4) + phase);
 
     vShade = mix(0.58, 1.0, aRandom.y);
-    vAlpha = uOpacity
+    vAlpha = uOpacity * cover
            * mix(1.0, 0.3, depthFade)
            * (0.4 + 0.6 * aRandom.y)
            * twinkle
@@ -112,13 +154,11 @@ export const particleVertexShader = /* glsl */ `
 export const particleFragmentShader = /* glsl */ `
   varying float vAlpha;
   varying float vShade;
+  ${POINT_FRAGMENT}
 
   void main() {
-    vec2 c = gl_PointCoord - 0.5;
-    float d = length(c);
-    if (d > 0.5) discard;
-    float core = 1.0 - smoothstep(0.0, 0.5, d);
-    float alpha = pow(core, 1.7) * vAlpha;
+    float alpha = pointMask() * vAlpha;
+    if (alpha < 0.004) discard;
     // Neutral silver with the faintest cool cast.
     vec3 color = vec3(0.965, 0.97, 1.0) * vShade;
     gl_FragColor = vec4(color, alpha);
@@ -137,6 +177,7 @@ export const ringVertexShader = /* glsl */ `
   attribute vec4 aData; // x: angle, y: radial jitter, z: vertical jitter, w: random
 
   varying float vAlpha;
+  ${POINT_VERTEX}
 
   void main() {
     float angle = aData.x + uTime * uSpeed;
@@ -149,9 +190,9 @@ export const ringVertexShader = /* glsl */ `
     // Trail: brightness ramps up toward a travelling head.
     float head = fract(aData.x / 6.2831853);
     float trail = pow(head, 1.7);
-    float size = uSize * (0.35 + trail * 1.4 + pow(aData.w, 6.0) * 1.2);
-    gl_PointSize = clamp(size * uPixelRatio / -mvPosition.z, 0.0, 12.0 * uPixelRatio);
-    vAlpha = uOpacity * (0.2 + trail * 0.85) * (0.5 + 0.5 * aData.w);
+    float diameter = uSize * (0.34 + trail * 0.45 + pow(aData.w, 16.0) * 1.4) * uPixelRatio / -mvPosition.z;
+    float cover = setPointSize(diameter, uPixelRatio);
+    vAlpha = uOpacity * cover * (0.22 + trail * 0.85) * (0.5 + 0.5 * aData.w);
   }
 `;
 
@@ -166,6 +207,7 @@ export const dustVertexShader = /* glsl */ `
   attribute vec4 aRandom;
 
   varying float vAlpha;
+  ${POINT_VERTEX}
 
   void main() {
     vec3 pos = position;
@@ -175,20 +217,20 @@ export const dustVertexShader = /* glsl */ `
 
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mvPosition;
-    float size = uSize * (0.4 + pow(aRandom.w, 5.0) * 2.2);
-    gl_PointSize = clamp(size * uPixelRatio / -mvPosition.z, 0.0, 6.0 * uPixelRatio);
+    float diameter = uSize * (0.42 + pow(aRandom.w, 16.0) * 1.8) * uPixelRatio / -mvPosition.z;
+    float cover = setPointSize(diameter, uPixelRatio);
     float twinkle = 0.6 + 0.4 * sin(uTime * (0.5 + aRandom.x * 2.0) + aRandom.z * 6.28);
-    vAlpha = uOpacity * (0.25 + 0.75 * aRandom.y) * twinkle;
+    vAlpha = uOpacity * cover * (0.25 + 0.75 * aRandom.y) * twinkle;
   }
 `;
 
 export const softPointFragmentShader = /* glsl */ `
   varying float vAlpha;
+  ${POINT_FRAGMENT}
 
   void main() {
-    float d = length(gl_PointCoord - 0.5);
-    if (d > 0.5) discard;
-    float core = 1.0 - smoothstep(0.0, 0.5, d);
-    gl_FragColor = vec4(vec3(0.96, 0.965, 0.98), pow(core, 1.8) * vAlpha);
+    float alpha = pointMask() * vAlpha;
+    if (alpha < 0.004) discard;
+    gl_FragColor = vec4(vec3(0.96, 0.965, 0.98), alpha);
   }
 `;

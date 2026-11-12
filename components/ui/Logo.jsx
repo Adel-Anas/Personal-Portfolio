@@ -1,18 +1,16 @@
 import { GLYPH } from "@/components/experience/shapes";
 
 const S = 80;
-const pt = ([x, y]) => `${(x * S).toFixed(1)},${(-y * S).toFixed(1)}`;
-const { outer: o, counter: c, prism: p } = GLYPH;
+const toPath = (poly) =>
+  "M" + poly.map(([x, y]) => `${(x * S).toFixed(2)},${(-y * S).toFixed(2)}`).join(" L") + " Z";
 
-/** Body traced with its counter cut out, plus the floating prism. */
-const GLYPH_PATH =
-  `M${pt(o[0])} L${pt(o[1])} L${pt(c[1])} L${pt(c[0])} L${pt(c[2])} L${pt(o[2])} Z ` +
-  `M${pt(p[0])} L${pt(p[1])} L${pt(p[2])} Z`;
+/** Chevron body + inner leg — the exact geometry used by the particle glyph. */
+export const GLYPH_PATH = `${toPath(GLYPH.body)} ${toPath(GLYPH.inner)}`;
 
-/** The "Aether A" mark — same geometry as the particle glyph. */
+/** The Adel Anas "A" mark. */
 export default function Logo({ className = "", title = "Adel Anas", ...rest }) {
   return (
-    <svg viewBox="-72 -84 144 168" className={className} role="img" aria-label={title} {...rest}>
+    <svg viewBox="-100 -82 200 164" className={className} role="img" aria-label={title} {...rest}>
       <path d={GLYPH_PATH} fill="currentColor" />
     </svg>
   );

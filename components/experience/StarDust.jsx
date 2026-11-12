@@ -38,7 +38,7 @@ export default function StarDust({ count = 2000, pointer, reducedMotion = false 
         uniforms: {
           uTime: { value: 0 },
           uPixelRatio: { value: 1 },
-          uSize: { value: 16 },
+          uSize: { value: 17 },
           uOpacity: { value: 0.75 },
           uScroll: { value: 0 },
         },

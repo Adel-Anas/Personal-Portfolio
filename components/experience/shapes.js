@@ -28,72 +28,63 @@ function gaussian(rng) {
 }
 
 /* ------------------------------------------------------------------ */
-/* The "Aether A" — the signature glyph, shared with the SVG logo.     */
+/* The Adel Anas "A" — the signature glyph, shared with the SVG logo. */
 /* ------------------------------------------------------------------ */
 
-/** Glyph geometry in unit space (height 2). Exported for the SVG logo. */
+/**
+ * Glyph geometry in unit space (height 2, y up), traced from the brand mark:
+ *  - body:  a chevron with uniform stroke (outer and inner edges are parallel)
+ *  - inner: a second, shorter leg parallel to the right stroke, ending at the
+ *           top-left in a "beak" cut horizontally.
+ */
 export const GLYPH = {
-  outer: [
+  body: [
     [0, 1],
-    [-0.86, -1],
-    [0.86, -1],
+    [-1.23, -1],
+    [-0.8, -1],
+    [0, 0.3],
+    [0.8, -1],
+    [1.23, -1],
   ],
-  counter: [
-    [-0.04, 0.34],
-    [-0.5, -1],
-    [0.4, -1],
-  ],
-  prism: [
-    [0.02, -0.36],
-    [-0.26, -1],
-    [0.24, -1],
+  inner: [
+    [0, 0],
+    [-0.308, -0.5],
+    [-0.098, -0.5],
+    [0.21, -1],
+    [0.615, -1],
   ],
 };
 
-function inTriangle(px, py, [a, b, c]) {
-  const d1 = (px - b[0]) * (a[1] - b[1]) - (a[0] - b[0]) * (py - b[1]);
-  const d2 = (px - c[0]) * (b[1] - c[1]) - (b[0] - c[0]) * (py - c[1]);
-  const d3 = (px - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (py - a[1]);
-  const neg = d1 < 0 || d2 < 0 || d3 < 0;
-  const pos = d1 > 0 || d2 > 0 || d3 > 0;
-  return !(neg && pos);
+const HALF_WIDTH = 1.23;
+const DEPTH = 0.24;
+
+function inPolygon(px, py, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
 }
 
-function inBody(x, y) {
-  return inTriangle(x, y, GLYPH.outer) && !inTriangle(x, y, GLYPH.counter);
+function inGlyph(x, y) {
+  return inPolygon(x, y, GLYPH.body) || inPolygon(x, y, GLYPH.inner);
 }
 
-function inPrism(x, y) {
-  return inTriangle(x, y, GLYPH.prism);
-}
-
-const BODY_DEPTH = 0.26;
-const PRISM_DEPTH = 0.14;
-const PRISM_Z = 0.2;
-
-/** Outline segments, each tagged with its extrusion depth and z offset. */
+/** Every outline segment of both polygons, weighted by length for sampling. */
 const GLYPH_EDGES = (() => {
-  const { outer: o, counter: c, prism: p } = GLYPH;
-  const body = [
-    [o[0], o[1]],
-    [o[0], o[2]],
-    [c[0], c[1]],
-    [c[0], c[2]],
-    [o[1], c[1]],
-    [c[2], o[2]],
-  ].map((seg) => ({ seg, depth: BODY_DEPTH, z: 0 }));
-  const prism = [
-    [p[0], p[1]],
-    [p[0], p[2]],
-    [p[1], p[2]],
-  ].map((seg) => ({ seg, depth: PRISM_DEPTH, z: PRISM_Z }));
-  const all = [...body, ...prism].map((e) => ({
-    ...e,
-    length: Math.hypot(e.seg[1][0] - e.seg[0][0], e.seg[1][1] - e.seg[0][1]),
+  const segments = [];
+  for (const poly of [GLYPH.body, GLYPH.inner]) {
+    poly.forEach((a, i) => segments.push([a, poly[(i + 1) % poly.length]]));
+  }
+  const withLength = segments.map((seg) => ({
+    seg,
+    length: Math.hypot(seg[1][0] - seg[0][0], seg[1][1] - seg[0][1]),
   }));
-  const total = all.reduce((s, e) => s + e.length, 0);
+  const total = withLength.reduce((sum, e) => sum + e.length, 0);
   let acc = 0;
-  return all.map((e) => {
+  return withLength.map((e) => {
     acc += e.length / total;
     return { ...e, cdf: acc };
   });
@@ -105,13 +96,20 @@ function pickEdge(rng) {
 }
 
 function sampleArea(rng) {
-  // Rejection sampling inside the glyph silhouette (body or prism).
   for (;;) {
-    const x = (rng() * 2 - 1) * 0.86;
+    const x = (rng() * 2 - 1) * HALF_WIDTH;
     const y = rng() * 2 - 1;
-    if (inPrism(x, y)) return { x, y, depth: PRISM_DEPTH, z: PRISM_Z };
-    if (inBody(x, y)) return { x, y, depth: BODY_DEPTH, z: 0 };
+    if (inGlyph(x, y)) return { x, y };
   }
+}
+
+function pointOnEdge(rng, jitter = 0) {
+  const { seg } = pickEdge(rng);
+  const t = rng();
+  return {
+    x: seg[0][0] + (seg[1][0] - seg[0][0]) * t + gaussian(rng) * jitter,
+    y: seg[0][1] + (seg[1][1] - seg[0][1]) * t + gaussian(rng) * jitter,
+  };
 }
 
 export function createLetterA(count, seed = 7) {
@@ -124,44 +122,56 @@ export function createLetterA(count, seed = 7) {
     let y;
     let z;
 
-    if (r < 0.34) {
-      // Front & back faces — gives the glyph its readable mass.
+    if (r < 0.3) {
+      // Front & back faces — the readable mass of the letter.
       const p = sampleArea(rng);
       x = p.x;
       y = p.y;
-      z = p.z + (rng() < 0.62 ? p.depth : -p.depth) + gaussian(rng) * 0.008;
-    } else if (r < 0.66) {
-      // Side walls along every outline edge.
-      const e = pickEdge(rng);
-      const t = rng();
-      x = e.seg[0][0] + (e.seg[1][0] - e.seg[0][0]) * t + gaussian(rng) * 0.006;
-      y = e.seg[0][1] + (e.seg[1][1] - e.seg[0][1]) * t + gaussian(rng) * 0.006;
-      z = e.z + (rng() * 2 - 1) * e.depth;
-    } else if (r < 0.78) {
-      // Crisp front/back contour lines — the bright edges that define the form.
-      const e = pickEdge(rng);
-      const t = rng();
-      x = e.seg[0][0] + (e.seg[1][0] - e.seg[0][0]) * t;
-      y = e.seg[0][1] + (e.seg[1][1] - e.seg[0][1]) * t;
-      z = e.z + (rng() < 0.7 ? e.depth : -e.depth);
-    } else if (r < 0.86) {
+      z = (rng() < 0.64 ? DEPTH : -DEPTH) + gaussian(rng) * 0.006;
+    } else if (r < 0.55) {
+      // Side walls along every outline edge — gives the extrusion its depth.
+      const p = pointOnEdge(rng, 0.004);
+      x = p.x;
+      y = p.y;
+      z = (rng() * 2 - 1) * DEPTH;
+    } else if (r < 0.68) {
+      // Sharp front/back contours — the bright lines that define the form.
+      const p = pointOnEdge(rng);
+      x = p.x;
+      y = p.y;
+      z = rng() < 0.7 ? DEPTH : -DEPTH;
+    } else if (r < 0.73) {
       // Sparse inner volume.
       const p = sampleArea(rng);
       x = p.x;
       y = p.y;
-      z = p.z + (rng() * 2 - 1) * p.depth;
-    } else if (r < 0.96) {
+      z = (rng() * 2 - 1) * DEPTH;
+    } else if (r < 0.81) {
       // Close halo — particles that have not fully settled into the form.
-      const p = sampleArea(rng);
-      const s = 0.06 + rng() * 0.22;
+      const p = rng() < 0.5 ? sampleArea(rng) : pointOnEdge(rng);
+      const s = 0.04 + rng() * 0.2;
       x = p.x + gaussian(rng) * s;
       y = p.y + gaussian(rng) * s;
-      z = p.z + gaussian(rng) * s * 1.5;
+      z = gaussian(rng) * s * 1.6;
+    } else if (r < 0.95) {
+      // A flowing ribbon of particles sweeping through the base of the letter.
+      const t = rng();
+      x = -2.6 + t * 5.6;
+      const crest = -0.95 + 0.26 * Math.sin(t * Math.PI * 2 - 0.6) + 0.12 * Math.sin(t * Math.PI * 5.2);
+      if (rng() < 0.28) {
+        // Bright filament riding the crest.
+        y = crest + gaussian(rng) * 0.012;
+        z = 0.32 + gaussian(rng) * 0.02;
+      } else {
+        // Dusty sheet around it, undulating in depth.
+        const depth = (rng() * 2 - 1) * 1.1;
+        y = crest + 0.16 * Math.sin(x * 1.4 + depth * 2.2) + gaussian(rng) * 0.07;
+        z = depth;
+      }
     } else {
-      // A diffuse dust cloud spilling from the base toward the lower left.
-      const t = Math.pow(rng(), 0.7);
-      x = 0.4 - t * 2.6 + gaussian(rng) * 0.5;
-      y = -1.0 - t * 0.35 + gaussian(rng) * 0.32;
+      // Fine dust rising from the apex and drifting around the form.
+      x = gaussian(rng) * 1.1;
+      y = 0.3 + Math.abs(gaussian(rng)) * 1.1;
       z = gaussian(rng) * 0.9;
     }
 

@@ -40,7 +40,7 @@ const ParticleSystem = forwardRef(function ParticleSystem(
     pointer,
     interactive = true,
     reducedMotion = false,
-    size = 21,
+    size = 19,
     stagger = 0.5,
     radius = 0.5,
     drift = 0.01,

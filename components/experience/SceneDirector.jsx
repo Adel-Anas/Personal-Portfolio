@@ -19,22 +19,22 @@ import { experienceStore, pointer } from "@/lib/store";
  *  spin    continuous Y rotation in rad/s
  */
 const SCENES = {
-  home: { shape: "glyph", x: 0.24, y: -0.015, scale: 0.8, rot: [0.12, -0.5, -0.04], spin: 0, opacity: 1, ring: 1 },
+  home: { shape: "glyph", x: 0.215, y: 0.06, scale: 0.88, rot: [0.1, -0.4, -0.04], spin: 0, opacity: 1, ring: 1 },
   about: { shape: "mind", x: 0.27, y: 0.0, scale: 0.92, rot: [0.25, 0, 0.12], spin: 0.08, opacity: 0.7, ring: 0 },
   expertise: { shape: "galaxy", x: 0.16, y: -0.02, scale: 1.05, rot: [0.62, 0, 0.22], spin: 0.05, opacity: 0.38, ring: 0 },
   projects: { shape: "wave", x: 0, y: -0.3, scale: 1, rot: [0.42, 0, 0], spin: 0, opacity: 0.4, ring: 0 },
   experience: { shape: "helix", x: 0.36, y: 0, scale: 1, rot: [0.1, 0, -0.32], spin: 0.12, opacity: 0.42, ring: 0 },
-  contact: { shape: "glyph", x: 0.27, y: 0.03, scale: 0.72, rot: [0.1, -0.36, -0.03], spin: 0, opacity: 0.95, ring: 1 },
+  contact: { shape: "glyph", x: 0.25, y: 0.04, scale: 0.84, rot: [0.14, -0.4, -0.04], spin: 0, opacity: 0.95, ring: 1 },
 };
 
 /** Portrait / small screens: centre the forms and keep them behind the copy. */
 const MOBILE_OVERRIDES = {
-  home: { x: 0.02, y: 0.27, scale: 0.74, opacity: 0.95 },
+  home: { x: 0.02, y: 0.26, scale: 0.66, opacity: 0.95 },
   about: { x: 0.2, y: 0.25, opacity: 0.45 },
   expertise: { x: 0, y: 0.05, opacity: 0.3 },
   projects: { y: -0.32, opacity: 0.32 },
   experience: { x: 0.3, opacity: 0.22 },
-  contact: { x: 0.12, y: 0.24, scale: 0.7, opacity: 0.38 },
+  contact: { x: 0.08, y: 0.24, scale: 0.6, opacity: 0.38 },
 };
 
 function resolveScene(id, portrait) {
@@ -150,8 +150,8 @@ export default function SceneDirector({ profile }) {
                 reducedMotion={reducedMotion}
                 interactive={!profile.coarse}
               />
-              <group position={[0.2, 0.1, 0.1]} rotation={[0.38, 0.12, 0.36]}>
-                <OrbitRing count={ringCount} radii={[0.98, 0.98]} reducedMotion={reducedMotion} ref={ring} />
+              <group position={[0.1, 0.06, 0.1]} rotation={[0.3, 0.1, 0.28]}>
+                <OrbitRing count={ringCount} radii={[1.36, 1.36]} reducedMotion={reducedMotion} ref={ring} />
               </group>
             </group>
           </group>

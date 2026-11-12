@@ -30,8 +30,8 @@ const SCENES = {
 /** Portrait / small screens: centre the forms and keep them behind the copy. */
 const MOBILE_OVERRIDES = {
   home: { x: 0.02, y: 0.26, scale: 0.66, opacity: 0.95 },
-  about: { x: 0.2, y: 0.25, opacity: 0.45 },
-  expertise: { x: 0, y: 0.05, opacity: 0.3 },
+  about: { x: 0.22, y: 0.3, scale: 0.8, opacity: 0.3 },
+  expertise: { x: 0, y: 0.02, scale: 1.15, opacity: 0.22 },
   projects: { y: -0.32, opacity: 0.32 },
   experience: { x: 0.3, opacity: 0.22 },
   contact: { x: 0.08, y: 0.24, scale: 0.6, opacity: 0.38 },
@@ -53,6 +53,8 @@ export default function SceneDirector({ profile }) {
   const tilt = useRef(null);
   const pose = useRef(null);
   const spin = useRef(0);
+  const stageBase = useRef({ x: 0, y: 0 });
+  const follow = useRef(1);
   const sceneId = useRef("home");
 
   const shapes = useMemo(() => {
@@ -102,8 +104,19 @@ export default function SceneDirector({ profile }) {
     // Stage — position and scale glide toward the active scene.
     const s = stage.current;
     if (s) {
-      s.position.x = THREE.MathUtils.damp(s.position.x, scene.x * viewport.width, k, dt);
-      s.position.y = THREE.MathUtils.damp(s.position.y, scene.y * viewport.height, k, dt);
+      const b = stageBase.current;
+      b.x = THREE.MathUtils.damp(b.x, scene.x * viewport.width, k, dt);
+      b.y = THREE.MathUtils.damp(b.y, scene.y * viewport.height, k, dt);
+
+      // Hero: the glyph travels up with the page (fully on mobile, as parallax on
+      // desktop) so it never slides underneath the copy. Applied without damping
+      // so it stays locked to the scroll position, then released on scene change.
+      follow.current = THREE.MathUtils.damp(follow.current, sceneId.current === "home" ? 1 : 0, 3, dt);
+      const scrolled = Math.min(window.scrollY / Math.max(1, window.innerHeight), 1.5);
+      const offset = scrolled * viewport.height * (portrait ? 1 : 0.35) * follow.current;
+
+      s.position.x = b.x;
+      s.position.y = b.y + offset;
       const sc = THREE.MathUtils.damp(s.scale.x, base * scene.scale, k, dt);
       s.scale.setScalar(sc);
     }

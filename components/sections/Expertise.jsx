@@ -11,10 +11,16 @@ export default function Expertise() {
   const root = useRef(null);
   const [active, setActive] = useState(skillOrbits[0].id);
   const [reduced, setReduced] = useState(false);
+  const [compact, setCompact] = useState(false);
   useSectionScene(root, "expertise");
 
   useEffect(() => {
     setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setCompact(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
   }, []);
 
   const total = skillOrbits.reduce((n, o) => n + o.items.length, 0);
@@ -32,13 +38,13 @@ export default function Expertise() {
         title={<span id="expertise-title">Technical universe.</span>}
         aside={
           <FadeIn as="p" className="text-[0.98rem] leading-relaxed text-ash">
-            {skillOrbits.length} orbits, {total} technologies, one system. Hover an orbit to trace how each layer
+            {skillOrbits.length} orbits, {total} technologies, one system. Select an orbit to trace how each layer
             connects back to the core.
           </FadeIn>
         }
       />
 
-      <div className="mt-[clamp(4rem,10vh,7rem)] grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8">
+      <div className="mt-[clamp(3rem,10vh,7rem)] grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-8">
         {/* Category index — the readable, accessible view of the same data. */}
         <div className="order-2 lg:order-1 lg:col-span-4">
           <ul className="border-t border-line" role="list">
@@ -48,11 +54,12 @@ export default function Expertise() {
                 <li key={orbit.id} className="border-b border-line">
                   <button
                     type="button"
-                    onMouseEnter={() => setActive(orbit.id)}
+                    onPointerEnter={(e) => e.pointerType === "mouse" && setActive(orbit.id)}
                     onFocus={() => setActive(orbit.id)}
                     onClick={() => setActive(orbit.id)}
-                    aria-pressed={isActive}
-                    className="group flex w-full items-baseline gap-5 py-5 text-left"
+                    aria-expanded={isActive}
+                    aria-controls={`orbit-panel-${orbit.id}`}
+                    className="group flex w-full touch-manipulation items-baseline gap-5 py-5 text-left [-webkit-tap-highlight-color:transparent]"
                   >
                     <span className="label-tech w-6">{String(i + 1).padStart(2, "0")}</span>
                     <span
@@ -65,6 +72,7 @@ export default function Expertise() {
                     <span className="label-tech tabular-nums">{String(orbit.items.length).padStart(2, "0")}</span>
                   </button>
                   <div
+                    id={`orbit-panel-${orbit.id}`}
                     className={`grid transition-[grid-template-rows,opacity] duration-700 ease-[var(--ease-expo)] ${
                       isActive ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
                     }`}
@@ -82,8 +90,14 @@ export default function Expertise() {
           </ul>
         </div>
 
-        <FadeIn className="order-1 lg:order-2 lg:col-span-8" y={40}>
-          <OrbitalDiagram orbits={skillOrbits} active={active} onActivate={setActive} reducedMotion={reduced} />
+        <FadeIn className="order-1 -mx-2 lg:order-2 lg:col-span-8 lg:mx-0" y={40}>
+          <OrbitalDiagram
+            orbits={skillOrbits}
+            active={active}
+            onActivate={setActive}
+            reducedMotion={reduced}
+            compact={compact}
+          />
         </FadeIn>
       </div>
     </section>

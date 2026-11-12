@@ -72,11 +72,14 @@ export default function SceneDirector({ profile }) {
       if (intro) {
         system.current?.setOpacity(scene.opacity, 1.6);
         system.current?.morphTo(scene.shape, { duration: 3.6, scatter: 1.1, delay: 0.1 });
-        ring.current?.setOpacity(scene.ring, 2.4);
+        // The ring is drawn while the glyph condenses, finishing just after it.
+        ring.current?.setOpacity(1, 0);
+        ring.current?.form(scene.ring, { duration: 3.6, delay: 1.3 });
       } else {
         system.current?.morphTo(scene.shape, { duration: 2.6, scatter: 0.55 });
         system.current?.setOpacity(scene.opacity, 1.4);
-        ring.current?.setOpacity(scene.ring, scene.ring ? 2 : 0.8);
+        ring.current?.setOpacity(1, 0);
+        ring.current?.form(scene.ring, scene.ring ? { duration: 3, delay: 0.6 } : { duration: 1.6 });
       }
     };
 

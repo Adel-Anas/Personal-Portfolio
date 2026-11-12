@@ -167,14 +167,20 @@ export const particleFragmentShader = /* glsl */ `
 
 /** Orbiting ring — a comet-like trail travelling along a tilted ellipse. */
 export const ringVertexShader = /* glsl */ `
+  #define PI 3.14159265359
+  #define TAU 6.28318530718
+
   uniform float uTime;
   uniform float uPixelRatio;
   uniform float uSize;
   uniform float uOpacity;
   uniform float uSpeed;
   uniform vec2  uRadii;
+  uniform float uForm;    // 0 = scattered, 1 = ring fully drawn
+  uniform float uStagger;
 
   attribute vec4 aData; // x: angle, y: radial jitter, z: vertical jitter, w: random
+  attribute vec3 aFrom; // scattered origin the particle flies in from
 
   varying float vAlpha;
   ${POINT_VERTEX}
@@ -182,17 +188,26 @@ export const ringVertexShader = /* glsl */ `
   void main() {
     float angle = aData.x + uTime * uSpeed;
     float r = 1.0 + aData.y;
-    vec3 pos = vec3(cos(angle) * uRadii.x * r, aData.z, sin(angle) * uRadii.y * r);
+    vec3 ringPos = vec3(cos(angle) * uRadii.x * r, aData.z, sin(angle) * uRadii.y * r);
+
+    // Formation: particles land on the orbit in angular order, from the tail
+    // to the bright head, so the ring is drawn like a stroke chasing its comet.
+    float head = fract(aData.x / TAU);
+    float delay = head * 0.93 + aData.w * 0.07;
+    float t = clamp(uForm * (1.0 + uStagger) - delay * uStagger, 0.0, 1.0);
+    float e = 1.0 - pow(1.0 - t, 3.0);
+    vec3 tangent = normalize(vec3(-sin(angle) * uRadii.x, 0.0, cos(angle) * uRadii.y));
+    vec3 pos = mix(aFrom, ringPos, e) + tangent * sin(PI * t) * (0.25 + aData.w * 0.5);
 
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mvPosition;
 
     // Trail: brightness ramps up toward a travelling head.
-    float head = fract(aData.x / 6.2831853);
     float trail = pow(head, 1.7);
     float diameter = uSize * (0.34 + trail * 0.45 + pow(aData.w, 16.0) * 1.4) * uPixelRatio / -mvPosition.z;
     float cover = setPointSize(diameter, uPixelRatio);
-    vAlpha = uOpacity * cover * (0.22 + trail * 0.85) * (0.5 + 0.5 * aData.w);
+    float arrival = smoothstep(0.0, 0.3, t) * (1.0 + sin(PI * t) * 0.9);
+    vAlpha = uOpacity * cover * arrival * (0.22 + trail * 0.85) * (0.5 + 0.5 * aData.w);
   }
 `;
 

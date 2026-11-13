@@ -21,7 +21,9 @@ import { experienceStore, pointer } from "@/lib/store";
  */
 const SCENES = {
   home: { shape: "glyph", x: 0.215, y: 0.06, scale: 0.88, rot: [0.1, -0.4, -0.04], spin: 0, opacity: 1, ring: 1 },
-  about: { shape: "strands", x: 0, y: -0.31, scale: 0.95, rot: [0.3, -0.12, -0.05], spin: 0, opacity: 0.85, ring: 0 },
+  about: { shape: "mind", x: 0.27, y: 0.0, scale: 0.92, rot: [0.25, 0, 0.12], spin: 0.08, opacity: 0.7, ring: 0 },
+  // Sub-scene: the profile + Design / Engineer / Build block. A quieter background layer.
+  "about:detail": { shape: "strands", x: 0, y: -0.31, scale: 0.95, rot: [0.3, -0.12, -0.05], spin: 0, opacity: 0.6, ring: 0 },
   expertise: { shape: "galaxy", x: 0.16, y: -0.02, scale: 1.05, rot: [0.62, 0, 0.22], spin: 0.05, opacity: 0.38, ring: 0 },
   projects: { shape: "wave", x: 0, y: -0.3, scale: 1, rot: [0.42, 0, 0], spin: 0, opacity: 0.4, ring: 0 },
   experience: { shape: "helix", x: 0.36, y: 0, scale: 1, rot: [0.1, 0, -0.32], spin: 0.12, opacity: 0.42, ring: 0 },
@@ -31,7 +33,8 @@ const SCENES = {
 /** Portrait / small screens: centre the forms and keep them behind the copy. */
 const MOBILE_OVERRIDES = {
   home: { x: 0.02, y: 0.26, scale: 0.66, opacity: 0.95 },
-  about: { x: 0, y: -0.42, scale: 0.75, opacity: 0.35 },
+  about: { x: 0.22, y: 0.3, scale: 0.8, opacity: 0.3 },
+  "about:detail": { x: 0, y: -0.42, scale: 0.75, opacity: 0.3 },
   expertise: { x: 0, y: 0.02, scale: 1.15, opacity: 0.22 },
   projects: { y: -0.32, opacity: 0.32 },
   experience: { x: 0.3, opacity: 0.22 },

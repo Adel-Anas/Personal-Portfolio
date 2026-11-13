@@ -36,7 +36,9 @@ const PILLARS = [
 export default function About() {
   const root = useRef(null);
   const statement = useRef(null);
+  const detail = useRef(null);
   useSectionScene(root, "about");
+  useSectionScene(detail, "about:detail", "about");
 
   useGSAP(
     () => {
@@ -51,9 +53,11 @@ export default function About() {
         onSplit: (self) =>
           gsap.fromTo(
             self.words,
-            { opacity: 0.14 },
+            // Animate colour, not opacity: the unread words stay opaque (dark grey),
+            // so the particles behind them are hidden instead of shining through.
+            { color: "#2a2a2a" },
             {
-              opacity: 1,
+              color: "#f5f5f5",
               ease: "none",
               stagger: 0.1,
               scrollTrigger: { trigger: el, start: "top 78%", end: "bottom 50%", scrub: 0.6 },
@@ -77,7 +81,7 @@ export default function About() {
         precision meets creative thinking, from the first pixel to the last query.
       </p>
 
-      <div className="mt-[clamp(5rem,14vh,9rem)] grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-8">
+      <div ref={detail} className="mt-[clamp(5rem,14vh,9rem)] grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-8">
         {/* Profile index */}
         <div className="lg:col-span-4">
           <FadeIn as="p" className="label-tech mb-8">

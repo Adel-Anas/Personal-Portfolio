@@ -204,8 +204,55 @@ export function createScatter(count, seed = 3) {
   return out;
 }
 
+/** "The mind": a breathing sphere wrapped in two thin orbits. */
+export function createMind(count, seed = 11) {
+  const rng = createRng(seed);
+  const out = new Float32Array(count * 3);
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  const surface = Math.floor(count * 0.72);
+
+  for (let i = 0; i < count; i++) {
+    let x;
+    let y;
+    let z;
+    if (i < surface) {
+      const k = i + 0.5;
+      const yy = 1 - (k / surface) * 2;
+      const r = Math.sqrt(1 - yy * yy);
+      const th = golden * k;
+      const lat = Math.asin(yy);
+      const bands = 1 + 0.05 * Math.sin(lat * 14) + gaussian(rng) * 0.012;
+      const radius = 0.95 * bands;
+      x = Math.cos(th) * r * radius;
+      y = yy * radius;
+      z = Math.sin(th) * r * radius;
+    } else if (rng() < 0.75) {
+      const th = rng() * Math.PI * 2;
+      const tilt = rng() < 0.5 ? 0.42 : -0.9;
+      const R = (rng() < 0.5 ? 1.35 : 1.62) + gaussian(rng) * 0.015;
+      const ox = Math.cos(th) * R;
+      const oz = Math.sin(th) * R;
+      x = ox;
+      y = oz * Math.sin(tilt) + gaussian(rng) * 0.01;
+      z = oz * Math.cos(tilt);
+    } else {
+      const u = rng() * 2 - 1;
+      const th = rng() * Math.PI * 2;
+      const r = 1.1 + Math.pow(rng(), 2) * 1.4;
+      const s = Math.sqrt(1 - u * u);
+      x = r * s * Math.cos(th);
+      y = r * u;
+      z = r * s * Math.sin(th);
+    }
+    out[i * 3] = x;
+    out[i * 3 + 1] = y;
+    out[i * 3 + 2] = z;
+  }
+  return out;
+}
+
 /**
- * "The mind": neural strands — thin signal lines sweeping across the screen,
+ * "Profile": neural strands — thin signal lines sweeping across the screen,
  * dotted with small bright synapses. Open by design so text stays readable
  * over it; the vertex shader animates it as a wave surface, so the strands
  * flow and weave through each other.
@@ -332,6 +379,7 @@ export function createHelix(count, seed = 41) {
 export const SHAPE_FACTORIES = {
   scatter: createScatter,
   glyph: createLetterA,
+  mind: createMind,
   strands: createStrands,
   galaxy: createGalaxy,
   wave: createWaveField,

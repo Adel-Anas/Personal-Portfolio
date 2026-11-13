@@ -207,7 +207,14 @@ export const ringVertexShader = /* glsl */ `
     float diameter = uSize * (0.34 + trail * 0.45 + pow(aData.w, 16.0) * 1.4) * uPixelRatio / -mvPosition.z;
     float cover = setPointSize(diameter, uPixelRatio);
     float arrival = smoothstep(0.0, 0.3, t) * (1.0 + sin(PI * t) * 0.9);
-    vAlpha = uOpacity * cover * arrival * (0.22 + trail * 0.85) * (0.5 + 0.5 * aData.w);
+
+    // Depth cue: the half of the orbit nearer the camera is brighter, the far
+    // half recedes. (Occlusion by the glyph itself is done by the depth buffer.)
+    float centreZ = (modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0)).z;
+    float nearness = smoothstep(-0.6, 0.6, (mvPosition.z - centreZ) / max(uRadii.y, 0.001));
+    float depthCue = mix(0.45, 1.15, nearness);
+
+    vAlpha = uOpacity * cover * arrival * depthCue * (0.22 + trail * 0.85) * (0.5 + 0.5 * aData.w);
   }
 `;
 

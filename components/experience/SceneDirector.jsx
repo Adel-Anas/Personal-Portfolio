@@ -6,6 +6,7 @@ import * as THREE from "three";
 import ParticleSystem from "./ParticleSystem";
 import OrbitRing from "./OrbitRing";
 import StarDust from "./StarDust";
+import GlyphOccluder from "./GlyphOccluder";
 import { SHAPE_FACTORIES } from "./shapes";
 import { experienceStore, pointer } from "@/lib/store";
 
@@ -49,6 +50,7 @@ export default function SceneDirector({ profile }) {
 
   const system = useRef(null);
   const ring = useRef(null);
+  const occluder = useRef(null);
   const stage = useRef(null);
   const tilt = useRef(null);
   const pose = useRef(null);
@@ -132,6 +134,12 @@ export default function SceneDirector({ profile }) {
     }
 
     // Pose — resting rotation, gentle sway and continuous spin.
+    // The occluder only exists while the glyph is actually formed, so the ring
+    // is never hidden by a letter that isn't there yet (or anymore).
+    if (occluder.current && system.current) {
+      occluder.current.visible = system.current.shape === "glyph" && system.current.progress > 0.72;
+    }
+
     const p = pose.current;
     if (p) {
       const time = state.clock.elapsedTime;
@@ -166,6 +174,7 @@ export default function SceneDirector({ profile }) {
                 reducedMotion={reducedMotion}
                 interactive={!profile.coarse}
               />
+              <GlyphOccluder ref={occluder} />
               <group position={[0.1, 0.06, 0.1]} rotation={[0.3, 0.1, 0.28]}>
                 <OrbitRing count={ringCount} radii={[1.36, 1.36]} reducedMotion={reducedMotion} ref={ring} />
               </group>

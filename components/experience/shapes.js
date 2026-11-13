@@ -56,7 +56,9 @@ export const GLYPH = {
 };
 
 const HALF_WIDTH = 1.23;
-const DEPTH = 0.24;
+/** Half-thickness of the extruded glyph (shared with the depth occluder). */
+export const GLYPH_DEPTH = 0.24;
+const DEPTH = GLYPH_DEPTH;
 
 function inPolygon(px, py, poly) {
   let inside = false;

@@ -89,6 +89,7 @@ const ParticleSystem = forwardRef(function ParticleSystem(
         fragmentShader: particleFragmentShader,
         transparent: true,
         depthWrite: false,
+        depthTest: false,
         blending: THREE.AdditiveBlending,
         uniforms: {
           uTime: { value: 0 },
@@ -147,6 +148,10 @@ const ParticleSystem = forwardRef(function ParticleSystem(
     () => ({
       get points() {
         return pointsRef.current;
+      },
+      /** Morph progress toward the current shape (0 → 1). */
+      get progress() {
+        return material.uniforms.uProgress.value;
       },
       get shape() {
         return current.current;

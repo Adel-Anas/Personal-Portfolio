@@ -34,6 +34,7 @@ export default function StarDust({ count = 2000, pointer, reducedMotion = false 
         fragmentShader: softPointFragmentShader,
         transparent: true,
         depthWrite: false,
+        depthTest: false,
         blending: THREE.AdditiveBlending,
         uniforms: {
           uTime: { value: 0 },

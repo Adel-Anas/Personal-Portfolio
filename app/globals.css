@@ -81,8 +81,10 @@ html.lenis body {
   line-height: 0.98;
 }
 
+/* Outlined display type. The fill is the page colour, not transparent, so the
+   letters stay opaque and the particle layer passes behind them. */
 @utility text-outline {
-  color: transparent;
+  color: var(--color-ink);
   -webkit-text-stroke: 1px rgba(255, 255, 255, 0.28);
 }
 

@@ -7,7 +7,7 @@ A single field of up to 44 000 particles travels through the whole page and chan
 | Section | Particle form |
 | --- | --- |
 | 01 Home | The Adel Anas **A** (exact brand mark), crossed by an orbiting ring and a flowing ribbon |
-| 02 About | "The mind" — a banded sphere wrapped in two orbits |
+| 02 About | "The mind" — a banded sphere; the profile block below it gets thin neural strands |
 | 03 Expertise | A three-arm spiral galaxy behind the orbital skill map |
 | 04 Projects | A flowing wave field |
 | 05 Experience | A rotating double helix |

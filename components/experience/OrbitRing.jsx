@@ -50,6 +50,8 @@ const OrbitRing = forwardRef(function OrbitRing(
         fragmentShader: softPointFragmentShader,
         transparent: true,
         depthWrite: false,
+        // Depth-tested so the glyph occluder can hide the far side of the orbit.
+        depthTest: true,
         blending: THREE.AdditiveBlending,
         uniforms: {
           uTime: { value: 0 },

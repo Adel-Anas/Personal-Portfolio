@@ -56,7 +56,9 @@ export const GLYPH = {
 };
 
 const HALF_WIDTH = 1.23;
-const DEPTH = 0.24;
+/** Half-thickness of the extruded glyph (shared with the depth occluder). */
+export const GLYPH_DEPTH = 0.24;
+const DEPTH = GLYPH_DEPTH;
 
 function inPolygon(px, py, poly) {
   let inside = false;
@@ -249,6 +251,61 @@ export function createMind(count, seed = 11) {
   return out;
 }
 
+/**
+ * "Profile": neural strands — thin signal lines sweeping across the screen,
+ * dotted with small bright synapses. Open by design so text stays readable
+ * over it; the vertex shader animates it as a wave surface, so the strands
+ * flow and weave through each other.
+ */
+export function createStrands(count, seed = 11) {
+  const rng = createRng(seed);
+  const out = new Float32Array(count * 3);
+  const STRANDS = 7;
+  const HALF_LENGTH = 5.8;
+  const strands = Array.from({ length: STRANDS }, (_, k) => {
+    const c = k - (STRANDS - 1) / 2;
+    return {
+      z: c * 0.26,
+      y: c * 0.1,
+      phase: k * 1.7,
+      freq: 0.55 + (k % 3) * 0.12,
+      amp: 0.16 + (k % 2) * 0.1,
+      // Alternate crisp filaments and softer, wispier ones.
+      width: k % 3 === 1 ? 0.022 : 0.004,
+    };
+  });
+  const curve = (st, x) => st.y + Math.sin(x * st.freq + st.phase) * st.amp * Math.exp(-(x * x) / 40);
+
+  for (let i = 0; i < count; i++) {
+    const r = rng();
+    const st = strands[i % STRANDS];
+    let x;
+    let y;
+    let z;
+    if (r < 0.86) {
+      // The strand itself — a fine filament.
+      x = (rng() * 2 - 1) * HALF_LENGTH;
+      y = curve(st, x) + gaussian(rng) * st.width;
+      z = st.z + gaussian(rng) * st.width;
+    } else if (r < 0.95) {
+      // Synapses: small bright knots at regular intervals along each strand.
+      const node = Math.round(((rng() * 2 - 1) * HALF_LENGTH) / 0.9) * 0.9 + st.phase * 0.1;
+      x = node + gaussian(rng) * 0.02;
+      y = curve(st, node) + gaussian(rng) * 0.02;
+      z = st.z + gaussian(rng) * 0.02;
+    } else {
+      // Sparse signal dust drifting between the strands.
+      x = (rng() * 2 - 1) * HALF_LENGTH;
+      y = gaussian(rng) * 0.35;
+      z = gaussian(rng) * 0.9;
+    }
+    out[i * 3] = x;
+    out[i * 3 + 1] = y;
+    out[i * 3 + 2] = z;
+  }
+  return out;
+}
+
 /** "Technical universe": a three-arm spiral galaxy. */
 export function createGalaxy(count, seed = 23) {
   const rng = createRng(seed);
@@ -323,10 +380,11 @@ export const SHAPE_FACTORIES = {
   scatter: createScatter,
   glyph: createLetterA,
   mind: createMind,
+  strands: createStrands,
   galaxy: createGalaxy,
   wave: createWaveField,
   helix: createHelix,
 };
 
 /** Shapes that the vertex shader animates as a wave surface. */
-export const WAVE_SHAPES = new Set(["wave"]);
+export const WAVE_SHAPES = new Set(["wave", "strands"]);

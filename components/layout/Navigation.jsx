@@ -20,7 +20,8 @@ export default function Navigation() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  useEffect(() => experienceStore.subscribe((s) => setActive(s.scene)), []);
+  // Sub-scenes ("about:detail") highlight their parent link.
+  useEffect(() => experienceStore.subscribe((s) => setActive(s.scene.split(":")[0])), []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);

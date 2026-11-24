@@ -8,6 +8,7 @@ import { MAX_RIPPLES, particleFragmentShader, particleVertexShader } from "./sha
 import { WAVE_SHAPES, createRng } from "./shapes";
 
 const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const smootherstep = (t) => t * t * t * (t * (t * 6 - 15) + 10);
 
 const _ndc = new THREE.Vector2();
 const _normal = new THREE.Vector3();
@@ -41,7 +42,7 @@ const ParticleSystem = forwardRef(function ParticleSystem(
     interactive = true,
     reducedMotion = false,
     size = 19,
-    stagger = 0.5,
+    stagger = 0.6,
     radius = 0.5,
     drift = 0.01,
     seed = 5,
@@ -133,13 +134,23 @@ const ParticleSystem = forwardRef(function ParticleSystem(
     const dir = geometry.attributes.aDir.array;
     const rnd = geometry.attributes.aRandom.array;
     for (let i = 0; i < count; i++) {
-      const t = Math.min(1, Math.max(0, p * (1 + st) - rnd[i * 4 + 3] * st));
-      const e = easeInOutCubic(t);
-      const swirl = Math.sin(Math.PI * t) * sc * (0.35 + rnd[i * 4 + 1]);
-      for (let k = 0; k < 3; k++) {
-        const j = i * 3 + k;
-        from[j] = from[j] + (to[j] - from[j]) * e + dir[j] * swirl;
-      }
+      const i3 = i * 3;
+      const i4 = i * 4;
+      // Mirror of the vertex shader's morph (sweep delay, smootherstep, flow swirl).
+      const sweep = Math.min(1, Math.max(0, (to[i3] + to[i3 + 1] * 0.6) / 5 + 0.5));
+      const delay = sweep * 0.75 + rnd[i4 + 3] * 0.25;
+      const t = Math.min(1, Math.max(0, p * (1 + st) - delay * st));
+      const e = smootherstep(t);
+      const mx = (from[i3] + to[i3]) * 0.5;
+      const my = (from[i3 + 1] + to[i3 + 1]) * 0.5;
+      const mz = (from[i3 + 2] + to[i3 + 2]) * 0.5;
+      const swirl = Math.sin(Math.PI * t) * sc * (0.6 + rnd[i4 + 1] * 0.4);
+      const fx = Math.sin(my * 1.7 + 1.3) * 0.85 + dir[i3] * 0.15;
+      const fy = Math.sin(mz * 1.9 + 0.4) * 0.85 + dir[i3 + 1] * 0.15;
+      const fz = Math.sin(mx * 1.5 + 2.1) * 0.85 + dir[i3 + 2] * 0.15;
+      from[i3] = from[i3] + (to[i3] - from[i3]) * e + fx * swirl;
+      from[i3 + 1] = from[i3 + 1] + (to[i3 + 1] - from[i3 + 1]) * e + fy * swirl;
+      from[i3 + 2] = from[i3 + 2] + (to[i3 + 2] - from[i3 + 2]) * e + fz * swirl;
     }
   };
 
@@ -187,7 +198,7 @@ const ParticleSystem = forwardRef(function ParticleSystem(
           value: 1,
           duration,
           delay,
-          ease: "none",
+          ease: "sine.inOut",
         });
       },
       setOpacity(value, duration = 1.2) {

@@ -376,6 +376,33 @@ export function createHelix(count, seed = 41) {
   return out;
 }
 
+/**
+ * Re-orders a point cloud so that index i lands at the same *relative* place
+ * in every shape: points are ranked into horizontal bands by height, then
+ * ordered by x inside each band (serpentine). Morphing between two clouds
+ * ordered this way keeps neighbours together, so the form flows instead of
+ * every particle crossing the screen to a random spot.
+ */
+export function coherentOrder(points) {
+  const n = points.length / 3;
+  const byY = Array.from({ length: n }, (_, i) => i).sort((a, b) => points[a * 3 + 1] - points[b * 3 + 1]);
+  const bands = Math.max(1, Math.round(Math.sqrt(n / 2.2)));
+  const size = Math.ceil(n / bands);
+  const out = new Float32Array(points.length);
+  let w = 0;
+  for (let b = 0; b < bands; b++) {
+    const band = byY.slice(b * size, (b + 1) * size);
+    band.sort((i, j) => (b % 2 ? -1 : 1) * (points[i * 3] - points[j * 3]));
+    for (const i of band) {
+      out[w * 3] = points[i * 3];
+      out[w * 3 + 1] = points[i * 3 + 1];
+      out[w * 3 + 2] = points[i * 3 + 2];
+      w++;
+    }
+  }
+  return out;
+}
+
 export const SHAPE_FACTORIES = {
   scatter: createScatter,
   glyph: createLetterA,

@@ -87,10 +87,19 @@ export const particleVertexShader = /* glsl */ `
 
   void main() {
     // --- Morph -------------------------------------------------------
-    float t = clamp(uProgress * (1.0 + uStagger) - aRandom.w * uStagger, 0.0, 1.0);
-    float e = easeInOutCubic(t);
+    // Particles start in a sweep across the target form (plus a little
+    // randomness), so the change travels through the shape like a wave.
+    float sweep = clamp((aTo.x + aTo.y * 0.6) / 5.0 + 0.5, 0.0, 1.0);
+    float delay = sweep * 0.75 + aRandom.w * 0.25;
+    float t = clamp(uProgress * (1.0 + uStagger) - delay * uStagger, 0.0, 1.0);
+    // Smootherstep: zero velocity and zero acceleration at both ends.
+    float e = t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
     vec3 pos = mix(position, aTo, e);
-    pos += aDir * sin(PI * t) * uScatter * (0.35 + aRandom.y);
+    // In flight, particles follow a smooth flow field shared by their
+    // neighbours (instead of each jumping in a random direction).
+    vec3 m = (position + aTo) * 0.5;
+    vec3 flow = vec3(sin(m.y * 1.7 + 1.3), sin(m.z * 1.9 + 0.4), sin(m.x * 1.5 + 2.1));
+    pos += (flow * 0.85 + aDir * 0.15) * sin(PI * t) * uScatter * (0.6 + aRandom.y * 0.4);
 
     // --- Fluid wave surface -----------------------------------------
     float waveAmount = mix(uWaveFrom, uWaveTo, e);

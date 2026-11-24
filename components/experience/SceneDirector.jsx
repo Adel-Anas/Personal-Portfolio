@@ -7,7 +7,7 @@ import ParticleSystem from "./ParticleSystem";
 import OrbitRing from "./OrbitRing";
 import StarDust from "./StarDust";
 import GlyphOccluder from "./GlyphOccluder";
-import { SHAPE_FACTORIES } from "./shapes";
+import { SHAPE_FACTORIES, coherentOrder } from "./shapes";
 import { experienceStore, pointer } from "@/lib/store";
 
 /**
@@ -64,7 +64,7 @@ export default function SceneDirector({ profile }) {
 
   const shapes = useMemo(() => {
     const out = {};
-    for (const [key, factory] of Object.entries(SHAPE_FACTORIES)) out[key] = factory(count);
+    for (const [key, factory] of Object.entries(SHAPE_FACTORIES)) out[key] = coherentOrder(factory(count));
     return out;
   }, [count]);
 
@@ -76,12 +76,12 @@ export default function SceneDirector({ profile }) {
       sceneId.current = id;
       if (intro) {
         system.current?.setOpacity(scene.opacity, 1.6);
-        system.current?.morphTo(scene.shape, { duration: 3.6, scatter: 1.1, delay: 0.1 });
+        system.current?.morphTo(scene.shape, { duration: 3.8, scatter: 0.9, delay: 0.1 });
         // The ring is drawn while the glyph condenses, finishing just after it.
         ring.current?.setOpacity(1, 0);
         ring.current?.form(scene.ring, { duration: 3.6, delay: 1.3 });
       } else {
-        system.current?.morphTo(scene.shape, { duration: 2.6, scatter: 0.55 });
+        system.current?.morphTo(scene.shape, { duration: 3.0, scatter: 0.45 });
         system.current?.setOpacity(scene.opacity, 1.4);
         ring.current?.setOpacity(1, 0);
         ring.current?.form(scene.ring, scene.ring ? { duration: 3, delay: 0.6 } : { duration: 1.6 });

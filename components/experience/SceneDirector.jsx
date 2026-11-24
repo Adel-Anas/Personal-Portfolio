@@ -53,8 +53,10 @@ const INTRO = "intro";
  * Scroll window of a transition: it starts when the next section's top
  * reaches START of the viewport height and completes LENGTH of a viewport later.
  */
-const START = 0.92;
-const LENGTH = 0.6;
+const START = 0.98;
+const LENGTH = 0.9;
+/** Inertia of the transitions (lower = slower, softer follow of the scroll). */
+const FOLLOW = 2.4;
 
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const smooth = (t) => t * t * (3 - 2 * t);
@@ -87,6 +89,8 @@ export default function SceneDirector({ profile }) {
   const intro = useRef({ progress: reducedMotion ? 1 : 0, opacity: reducedMotion ? 1 : 0, started: false });
   // The pair of forms currently on screen and how far between them we are.
   // With reduced motion there is no intro: start directly on the glyph.
+  // Damped position along the page, in "scene units" (1.5 = halfway between scenes 1 and 2).
+  const stage = useRef(0);
   const pair = useRef(
     reducedMotion ? { from: "home", to: "about", p: 0, baked: false } : { from: INTRO, to: "home", p: 0, baked: false }
   );
@@ -128,7 +132,7 @@ export default function SceneDirector({ profile }) {
       intro.current.started = true;
       if (reducedMotion) return;
       gsap.to(intro.current, { opacity: 1, duration: 1.6, ease: "power2.out" });
-      gsap.to(intro.current, { progress: 1, duration: 4.2, delay: 0.1, ease: "sine.inOut" });
+      gsap.to(intro.current, { progress: 1, duration: 5, delay: 0.1, ease: "sine.inOut" });
     };
     start(experienceStore.get());
     return experienceStore.subscribe(start);
@@ -147,22 +151,26 @@ export default function SceneDirector({ profile }) {
     return target.compose(_p, _q, _s);
   };
 
-  /** Which two forms the scroll position sits between, and the progress (0..1). */
-  const readScroll = () => {
+  /** Continuous position along the page: k + p, between scene k and k + 1. */
+  const readStage = () => {
     const vh = window.innerHeight;
     const els = sceneEls.current;
-    let k = 0;
-    let p = 0;
+    let stageValue = 0;
     for (let i = 1; i < els.length; i++) {
       const top = els[i].el.getBoundingClientRect().top;
       const pi = clamp01((vh * START - top) / (vh * LENGTH));
-      if (pi > 0) {
-        k = i;
-        p = pi;
-      }
+      if (pi > 0) stageValue = Math.max(stageValue, i - 1 + pi);
     }
-    if (k === 0) return { from: els[0]?.id ?? "home", to: els[1]?.id ?? "about", p: 0 };
-    return { from: els[k - 1].id, to: els[k].id, p };
+    return stageValue;
+  };
+
+  /** Which two forms a stage value sits between, and the progress (0..1). */
+  const pairAt = (value) => {
+    const els = sceneEls.current;
+    const last = Math.max(1, els.length - 1);
+    const v = Math.min(Math.max(value, 0), last);
+    const k = Math.min(Math.floor(v), last - 1);
+    return { from: els[k]?.id ?? "home", to: els[k + 1]?.id ?? "about", p: v - k };
   };
 
   useFrame((state, delta) => {
@@ -176,7 +184,11 @@ export default function SceneDirector({ profile }) {
     if (!reducedMotion) for (const id of ORDER) spins.current[id] = (spins.current[id] || 0) + SCENES[id].spin * dt;
 
     // ---- 1. Desired state ------------------------------------------------
-    let desired = readScroll();
+    // The page position is damped once, here: everything downstream follows it
+    // with inertia, and boundaries between scenes are crossed continuously.
+    const target = readStage();
+    stage.current = reducedMotion ? target : THREE.MathUtils.damp(stage.current, target, FOLLOW, dt);
+    let desired = pairAt(stage.current);
     const it = intro.current;
     if (it.progress < 1) {
       if (desired.p > 0 || desired.from !== "home") {
@@ -208,8 +220,7 @@ export default function SceneDirector({ profile }) {
       cur.to = desired.to;
       cur.p = desired.p;
     } else {
-      // Light smoothing on top of Lenis keeps wheel steps from feeling stepped.
-      cur.p = reducedMotion ? desired.p : THREE.MathUtils.damp(cur.p, desired.p, 9, dt);
+      cur.p = desired.p;
     }
 
     // ---- 3. Uniforms -----------------------------------------------------

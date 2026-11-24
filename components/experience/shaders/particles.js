@@ -114,9 +114,9 @@ export const particleVertexShader = /* glsl */ `
     float flight = sin(PI * t);
     vec3 m = (A + B) * 0.5;
     vec3 flow = vec3(
-      sin(m.y * 1.3 + 1.3 + uTime * 0.35),
-      sin(m.z * 1.5 + 0.4 + uTime * 0.3),
-      sin(m.x * 1.1 + 2.1 + uTime * 0.25)
+      sin(m.y * 1.3 + 1.3 + uTime * 0.22),
+      sin(m.z * 1.5 + 0.4 + uTime * 0.18),
+      sin(m.x * 1.1 + 2.1 + uTime * 0.15)
     );
     pos += (flow * 0.6 + aDir * 0.4) * flight * uScatter * (0.5 + aRandom.y * 0.5);
 

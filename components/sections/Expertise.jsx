@@ -28,6 +28,7 @@ export default function Expertise() {
   return (
     <section
       id="expertise"
+      data-scene="expertise"
       ref={root}
       aria-labelledby="expertise-title"
       className="relative px-gutter py-[clamp(7rem,18vh,12rem)]"

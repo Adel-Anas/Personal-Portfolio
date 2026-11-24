@@ -45,6 +45,7 @@ export default function Contact() {
   return (
     <section
       id="contact"
+      data-scene="contact"
       ref={root}
       aria-labelledby="contact-title"
       className="relative flex min-h-[100svh] flex-col justify-between overflow-hidden px-gutter pt-[clamp(7rem,18vh,12rem)]"

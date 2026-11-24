@@ -69,7 +69,7 @@ export default function About() {
   );
 
   return (
-    <section id="about" ref={root} aria-labelledby="about-title" className="relative px-gutter py-[clamp(7rem,18vh,12rem)]">
+    <section id="about" data-scene="about" ref={root} aria-labelledby="about-title" className="relative px-gutter py-[clamp(7rem,18vh,12rem)]">
       <SectionHeader index="02" label="About" title={<span id="about-title">The mind behind the code.</span>} />
 
       <p
@@ -81,7 +81,7 @@ export default function About() {
         precision meets creative thinking, from the first pixel to the last query.
       </p>
 
-      <div ref={detail} className="mt-[clamp(5rem,14vh,9rem)] grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-8">
+      <div ref={detail} data-scene="about:detail" className="mt-[clamp(5rem,14vh,9rem)] grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-8">
         {/* Profile index */}
         <div className="lg:col-span-4">
           <FadeIn as="p" className="label-tech mb-8">

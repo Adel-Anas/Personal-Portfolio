@@ -105,6 +105,7 @@ export default function Hero() {
   return (
     <section
       id="home"
+      data-scene="home"
       ref={root}
       aria-label="Introduction"
       className="relative flex h-[100svh] min-h-[620px] items-center overflow-hidden px-gutter max-md:items-end max-md:pb-[9svh]"

@@ -127,6 +127,7 @@ export default function Projects() {
   return (
     <section
       id="projects"
+      data-scene="projects"
       ref={root}
       aria-labelledby="projects-title"
       className="relative px-gutter py-[clamp(7rem,18vh,12rem)]"

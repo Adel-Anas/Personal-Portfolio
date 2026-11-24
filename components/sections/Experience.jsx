@@ -45,6 +45,7 @@ export default function Experience() {
   return (
     <section
       id="experience"
+      data-scene="experience"
       ref={root}
       aria-labelledby="experience-title"
       className="relative px-gutter py-[clamp(7rem,18vh,12rem)]"

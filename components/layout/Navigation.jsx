@@ -114,7 +114,13 @@ export default function Navigation() {
         data-reveal
         className={`fixed inset-x-0 top-0 z-50 px-gutter transition-[padding] duration-700 ease-[var(--ease-expo)] ${scrolled ? "pt-4 md:pt-5" : "pt-6 md:pt-[2.6rem]"}`}
       >
-        <nav className="relative flex items-center justify-between" aria-label="Primary">
+        <nav
+          className={`relative flex items-center justify-between transition-[text-shadow] duration-700 ${
+            // Over the clear glass, a soft dark halo keeps labels legible against bright content.
+            scrolled ? "[text-shadow:0_0_12px_rgba(0,0,0,0.9),0_0_3px_rgba(0,0,0,0.8)]" : ""
+          }`}
+          aria-label="Primary"
+        >
           {/* Liquid glass capsule: appears once the page scrolls, bending what passes under it. */}
           <LiquidGlass active={scrolled} className="absolute -inset-x-4 -inset-y-2.5 -z-10 md:-inset-x-6 md:-inset-y-3" />
           <a href="#home" onClick={go("home")} data-nav-item className="group flex items-center gap-6" aria-label="Adel Anas — home">

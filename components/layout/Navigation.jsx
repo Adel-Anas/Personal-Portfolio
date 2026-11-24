@@ -6,7 +6,6 @@ import { experienceStore } from "@/lib/store";
 import { scrollToSection, getLenis } from "@/lib/scroll";
 import { sections, site } from "@/data/site";
 import Logo from "@/components/ui/Logo";
-import LiquidGlass from "@/components/ui/LiquidGlass";
 
 /**
  * Minimal navigation. A single dot glides to the active section; on small
@@ -112,17 +111,14 @@ export default function Navigation() {
       <header
         ref={root}
         data-reveal
-        className={`fixed inset-x-0 top-0 z-50 px-gutter transition-[padding] duration-700 ease-[var(--ease-expo)] ${scrolled ? "pt-4 md:pt-5" : "pt-6 md:pt-[2.6rem]"}`}
+        className="fixed inset-x-0 top-0 z-50 px-gutter pt-6 md:pt-[2.6rem]"
       >
-        <nav
-          className={`relative flex items-center justify-between transition-[text-shadow] duration-700 ${
-            // Over the clear glass, a soft dark halo keeps labels legible against bright content.
-            scrolled ? "[text-shadow:0_0_12px_rgba(0,0,0,0.9),0_0_3px_rgba(0,0,0,0.8)]" : ""
+        <div
+          className={`pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-ink via-ink/70 to-transparent transition-opacity duration-700 ${
+            scrolled ? "opacity-100" : "opacity-0"
           }`}
-          aria-label="Primary"
-        >
-          {/* Liquid glass capsule: appears once the page scrolls, bending what passes under it. */}
-          <LiquidGlass active={scrolled} className="absolute -inset-x-4 -inset-y-2.5 -z-10 md:-inset-x-6 md:-inset-y-3" />
+        />
+        <nav className="relative flex items-center justify-between" aria-label="Primary">
           <a href="#home" onClick={go("home")} data-nav-item className="group flex items-center gap-6" aria-label="Adel Anas — home">
             <Logo className="h-9 w-auto text-paper transition-transform duration-700 ease-[var(--ease-expo)] group-hover:scale-95 md:h-[2.75rem]" />
             <span className="h-9 w-px bg-line-strong md:h-10" />

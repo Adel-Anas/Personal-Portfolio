@@ -84,7 +84,9 @@ export default function Footer() {
 
       // The name rises letter by letter, on both layers at once.
       const chars = q("[data-mark-layer]").flatMap(
-        (layer) => SplitText.create(layer, { type: "chars", mask: "chars" }).chars
+        // Mask the whole line, not each letter: per-letter masks are only as wide
+        // as the letter's advance and would crop wide glyphs (D, A, S).
+        (layer) => SplitText.create(layer, { type: "lines,chars", mask: "lines", linesClass: "mark-line" }).chars
       );
       gsap.from(chars, {
         yPercent: 110,
@@ -212,7 +214,7 @@ export default function Footer() {
       {/* 3 — Signature */}
       <div
         ref={mark}
-        className="relative select-none whitespace-nowrap text-center text-[clamp(3.6rem,16.2vw,20rem)] font-medium leading-[0.8] tracking-[-0.065em]"
+        className="relative select-none whitespace-nowrap text-center text-[clamp(3.4rem,15vw,19rem)] font-medium leading-[0.86] tracking-[-0.045em]"
         aria-label="Adel Anas"
         role="img"
       >

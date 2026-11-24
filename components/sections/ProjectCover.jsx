@@ -37,6 +37,7 @@ export default function ProjectCover({ project, index }) {
             alt={`${project.name} — preview`}
             fill
             sizes="(min-width: 1024px) 58vw, 100vw"
+            quality={90}
             className="object-cover grayscale transition-[filter,transform] duration-[1.4s] ease-[var(--ease-expo)] group-hover/cover:scale-[1.03] group-hover/cover:grayscale-0"
           />
         ) : (

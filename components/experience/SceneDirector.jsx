@@ -33,6 +33,8 @@ const SCENES = {
   projects: { shape: "wave", x: 0, y: -0.3, scale: 1, rot: [0.42, 0, 0], spin: 0, opacity: 0.4 },
   experience: { shape: "helix", x: 0.36, y: 0, scale: 1, rot: [0.1, 0, -0.32], spin: 0.12, opacity: 0.42 },
   contact: { shape: "glyph", x: 0.25, y: 0.04, scale: 0.84, rot: [0.14, -0.4, -0.04], spin: 0, opacity: 0.95 },
+  // Footer: the glyph dissolves into a low flowing horizon beneath the name.
+  footer: { shape: "strands", x: 0, y: -0.36, scale: 1.05, rot: [0.38, 0, -0.03], spin: 0, opacity: 0.5 },
 };
 
 /** Portrait / small screens: centre the forms and keep them behind the copy. */
@@ -44,6 +46,7 @@ const MOBILE_OVERRIDES = {
   projects: { y: -0.32, opacity: 0.32 },
   experience: { x: 0.3, opacity: 0.22 },
   contact: { x: 0.08, y: 0.24, scale: 0.6, opacity: 0.38 },
+  footer: { y: -0.42, scale: 0.8, opacity: 0.3 },
 };
 
 const ORDER = Object.keys(SCENES);

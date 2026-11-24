@@ -10,6 +10,30 @@
  */
 export const projects = [
   {
+    id: "provenk",
+    name: "Provenk",
+    category: "Full Stack · Booking & E-commerce",
+    year: "",
+    description:
+      "A complete website for a car care business — \u201cCar care, to the millimetre.\u201d Customers book an appointment online in five steps (service, vehicle, date & time, details, summary), buy care products from an integrated shop priced in MAD, and browse services, past work, a blog and an FAQ, in French and English. Behind it: authenticated accounts and an admin side, a PostgreSQL database and cloud storage for media.",
+    stack: [
+      "Next.js 16",
+      "React 19",
+      "TypeScript",
+      "Tailwind CSS",
+      "Prisma",
+      "PostgreSQL (Neon)",
+      "Better Auth",
+      "next-intl",
+      "AWS S3",
+      "Zod",
+    ],
+    image: "/projects/provenk.jpg",
+    live: "https://provenk.vercel.app/en",
+    source: null,
+    sample: false,
+  },
+  {
     id: "aether",
     name: "Aether",
     category: "Creative Development",

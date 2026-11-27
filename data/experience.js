@@ -17,7 +17,7 @@ export const experience = [
       "Authentication flows with JWT sessions and Bcrypt-hashed credentials",
       "Deployments on Vercel and Netlify, containerised services with Docker",
     ],
-    stack: ["React.js", "Next.js", "Node.js", "MongoDB"],
+    stack: ["React.js", "Next.js", "Node.js", "MongoDB", "Express Js", "Nest Js"],
   },
   {
     period: "Chapter 03",

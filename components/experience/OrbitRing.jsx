@@ -71,6 +71,11 @@ const OrbitRing = forwardRef(function OrbitRing(
   useEffect(() => () => (geometry.dispose(), material.dispose()), [geometry, material]);
 
   useImperativeHandle(ref, () => ({
+    /** Set the formation directly (scroll-driven): 0 = scattered, 1 = drawn. */
+    setForm(value) {
+      gsap.killTweensOf(material.uniforms.uForm);
+      material.uniforms.uForm.value = reducedMotion ? (value > 0.5 ? 1 : 0) : value;
+    },
     /** Draw the ring (1) or dissolve it back into scattered particles (0). */
     form(value, { duration = 2.8, delay = 0 } = {}) {
       const u = material.uniforms.uForm;

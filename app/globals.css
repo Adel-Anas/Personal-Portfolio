@@ -150,3 +150,16 @@ html.lenis body {
   0%, 100% { box-shadow: 0 0 0 0 rgba(245, 245, 245, 0.45); }
   50% { box-shadow: 0 0 0 5px rgba(245, 245, 245, 0); }
 }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* Footer signature: room around the masked line so no glyph edge is cropped. */
+.mark-line {
+  /* Horizontal room only via negative margin: a vertical negative margin
+     collapses differently in the absolute spotlight layer and offsets it. */
+  padding: 0.06em 0.08em;
+  margin: 0 -0.08em;
+}

@@ -1,18 +1,16 @@
 "use client";
 
 import { useRef } from "react";
-import { ArrowUp, ArrowUpRight } from "lucide-react";
-import { gsap, SplitText, useGSAP } from "@/lib/gsap";
+import { ArrowUpRight } from "lucide-react";
 import { useSectionScene } from "@/lib/useSectionScene";
-import { scrollToSection } from "@/lib/scroll";
 import { site } from "@/data/site";
 import RevealText from "@/components/ui/RevealText";
 import FadeIn from "@/components/ui/FadeIn";
 import MagneticButton from "@/components/ui/MagneticButton";
+import Footer from "@/components/layout/Footer";
 
 export default function Contact() {
   const root = useRef(null);
-  const wordmark = useRef(null);
   useSectionScene(root, "contact");
 
   const channels = [
@@ -23,28 +21,11 @@ export default function Contact() {
 
   const primary = site.email ? `mailto:${site.email}` : site.socials.linkedin;
 
-  useGSAP(
-    () => {
-      const el = wordmark.current;
-      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      gsap.set(el, { visibility: "visible" });
-      if (reduced) return;
-      // Closing signature: the name rises letter by letter from below the fold.
-      const split = SplitText.create(el, { type: "chars", mask: "chars" });
-      gsap.from(split.chars, {
-        yPercent: 105,
-        duration: 1.6,
-        stagger: 0.045,
-        ease: "expo.out",
-        scrollTrigger: { trigger: el, start: "top 98%", once: true },
-      });
-    },
-    { scope: root }
-  );
 
   return (
     <section
       id="contact"
+      data-scene="contact"
       ref={root}
       aria-labelledby="contact-title"
       className="relative flex min-h-[100svh] flex-col justify-between overflow-hidden px-gutter pt-[clamp(7rem,18vh,12rem)]"
@@ -112,28 +93,7 @@ export default function Contact() {
         </ul>
       </div>
 
-      <footer className="relative mt-[clamp(5rem,12vh,8rem)]">
-        <p
-          ref={wordmark}
-          data-reveal
-          aria-hidden="true"
-          className="select-none whitespace-nowrap text-center text-[clamp(3.5rem,15.6vw,19rem)] leading-[0.82] tracking-[-0.06em] text-outline"
-        >
-          ADEL ANAS
-        </p>
-        <div className="flex flex-col gap-4 border-t border-line py-7 sm:flex-row sm:items-center sm:justify-between">
-          <span className="label-tech">© {new Date().getFullYear()} Adel Anas</span>
-          <span className="label-tech hidden md:inline">Designed &amp; engineered by Adel Anas</span>
-          <button
-            type="button"
-            onClick={() => scrollToSection("home")}
-            className="label-tech group flex items-center gap-3 text-paper"
-          >
-            Back to top
-            <ArrowUp className="size-3.5 transition-transform duration-500 group-hover:-translate-y-1" strokeWidth={1.5} />
-          </button>
-        </div>
-      </footer>
+      <Footer />
     </section>
   );
 }

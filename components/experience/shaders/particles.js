@@ -68,6 +68,8 @@ export const particleVertexShader = /* glsl */ `
   uniform float uDrift;
   uniform float uWaveFrom;
   uniform float uWaveTo;
+  uniform mat4  uFromMatrix; // placement of the form being left
+  uniform mat4  uToMatrix;   // placement of the form being built
   uniform vec3  uPointer;
   uniform float uHover;
   uniform float uRadius;
@@ -81,23 +83,42 @@ export const particleVertexShader = /* glsl */ `
   varying float vShade;
   ${POINT_VERTEX}
 
-  float easeInOutCubic(float t) {
-    return t < 0.5 ? 4.0 * t * t * t : 1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0;
+  // Animated wave surface, evaluated in a form's own space.
+  float waveAt(vec3 p) {
+    return sin(p.x * 1.25 + uTime * 0.55) * 0.26
+         + sin(p.z * 1.9 - uTime * 0.7 + p.x * 0.45) * 0.16
+         + sin((p.x + p.z) * 3.2 + uTime * 1.1) * 0.035;
   }
 
   void main() {
-    // --- Morph -------------------------------------------------------
-    float t = clamp(uProgress * (1.0 + uStagger) - aRandom.w * uStagger, 0.0, 1.0);
-    float e = easeInOutCubic(t);
-    vec3 pos = mix(position, aTo, e);
-    pos += aDir * sin(PI * t) * uScatter * (0.35 + aRandom.y);
+    // --- Endpoints ----------------------------------------------------
+    // Each form lives in its own space and is placed in the scene by its own
+    // matrix, so particles travel individually between the two placements.
+    vec3 a = position;
+    a.y += waveAt(a) * uWaveFrom;
+    vec3 b = aTo;
+    b.y += waveAt(b) * uWaveTo;
+    vec3 A = (uFromMatrix * vec4(a, 1.0)).xyz;
+    vec3 B = (uToMatrix * vec4(b, 1.0)).xyz;
 
-    // --- Fluid wave surface -----------------------------------------
-    float waveAmount = mix(uWaveFrom, uWaveTo, e);
-    float wave = sin(pos.x * 1.25 + uTime * 0.55) * 0.26
-               + sin(pos.z * 1.9 - uTime * 0.7 + pos.x * 0.45) * 0.16
-               + sin((pos.x + pos.z) * 3.2 + uTime * 1.1) * 0.035;
-    pos.y += wave * waveAmount;
+    // --- Dissolve → flight → assemble -----------------------------------
+    // Particles leave in a sweep across the form (plus a little randomness),
+    // so the old form crumbles progressively rather than all at once.
+    float sweep = clamp((aTo.x + aTo.y * 0.6) / 5.0 + 0.5, 0.0, 1.0);
+    float delay = sweep * 0.75 + aRandom.w * 0.25;
+    float t = clamp(uProgress * (1.0 + uStagger) - delay * uStagger, 0.0, 1.0);
+    float e = t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+    vec3 pos = mix(A, B, e);
+    // In flight the particles are dust: carried by a slowly moving flow field
+    // shared with their neighbours, with some individual scatter.
+    float flight = sin(PI * t);
+    vec3 m = (A + B) * 0.5;
+    vec3 flow = vec3(
+      sin(m.y * 1.3 + 1.3 + uTime * 0.22),
+      sin(m.z * 1.5 + 0.4 + uTime * 0.18),
+      sin(m.x * 1.1 + 2.1 + uTime * 0.15)
+    );
+    pos += (flow * 0.6 + aDir * 0.4) * flight * uScatter * (0.5 + aRandom.y * 0.5);
 
     // --- Ambient drift ----------------------------------------------
     float phase = aRandom.z * 6.2831853;
@@ -113,7 +134,7 @@ export const particleVertexShader = /* glsl */ `
     vec2 away = toPointer / max(dist, 0.0001);
     float influence = 1.0 - smoothstep(0.0, uRadius, dist);
     influence = influence * influence * uHover;
-    pos.xy += away * influence * 0.26 * (0.45 + aRandom.y);
+    pos.xy += away * influence * 0.34 * (0.45 + aRandom.y);
     pos.z += influence * (aRandom.z - 0.3) * 0.55;
 
     // --- Propagating ripples -----------------------------------------
@@ -125,10 +146,10 @@ export const particleVertexShader = /* glsl */ `
       if (age < 0.0) continue;
       vec2 d = pos.xy - r.xy;
       float rd = length(d);
-      float front = rd - age * 1.35;
-      float ring = exp(-front * front * 18.0) * exp(-age * 1.25) * r.w;
-      pos.z += ring * 0.3;
-      pos.xy += (d / max(rd, 0.0001)) * ring * 0.06;
+      float front = rd - age * 1.8;
+      float ring = exp(-front * front * 10.0) * exp(-age * 1.25) * r.w;
+      pos.z += ring * 0.4;
+      pos.xy += (d / max(rd, 0.0001)) * ring * 0.08;
       rippleGlow += ring;
     }
 
@@ -136,7 +157,8 @@ export const particleVertexShader = /* glsl */ `
     gl_Position = projectionMatrix * mvPosition;
 
     // Most particles are tiny; a rare few are larger to add depth and sparkle.
-    float diameter = uSize * (0.34 + pow(aRandom.x, 28.0) * 1.6) * uPixelRatio / -mvPosition.z;
+    // Dust in flight is finer than the settled form.
+    float diameter = uSize * (0.34 + pow(aRandom.x, 28.0) * 1.6) * mix(1.0, 0.7, flight) * uPixelRatio / -mvPosition.z;
     float cover = setPointSize(diameter, uPixelRatio);
 
     float depthFade = clamp((-mvPosition.z - 3.5) / 7.0, 0.0, 1.0);

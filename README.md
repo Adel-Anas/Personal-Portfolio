@@ -13,7 +13,7 @@ A single field of up to 44 000 particles travels through the whole page and chan
 | 05 Experience | A rotating double helix |
 | 06 Contact | The glyph re-forms to close the experience |
 
-The particles react to the cursor (repulsion and propagating ripples) and always settle back into their shape.
+Transitions are driven by the scroll position: between two sections the current form crumbles into dust, the dust flows to where the next form lives and assembles it there; scrolling back rewinds it. The particles also react to the cursor (repulsion and propagating ripples) and always settle back into their shape.
 
 ## Stack
 
